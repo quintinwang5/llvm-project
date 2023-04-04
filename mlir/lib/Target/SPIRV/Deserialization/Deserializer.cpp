@@ -273,19 +273,20 @@ LogicalResult spirv::Deserializer::processDecoration(ArrayRef<uint32_t> words) {
              << decorationName
              << " needs at least 1 string and 1 integer literal";
     }
-    // LinkageAttributes has two parameters ["linkageName", linkageType]
+    // LinkageAttributes has two parameters ["Name", "LinkageType"]
     // e.g., OpDecorate %imported_func LinkageAttributes "outside.func" Import
-    // "linkageName" is a stringliteral encoded as uint32_t,
+    // "name" is a stringliteral encoded as uint32_t,
     // hence the size of name is variable length which results in words.size()
-    // being variable length, words.size() = 3 + strlen(name)/4 + 1 or
-    // 3 + ceildiv(strlen(name), 4).
+    // being variable length, words.size() = 3 + strlen(name)/4 + 1
+    // uint32_t linkageNameLen = words.size() - 3;
     unsigned wordIndex = 2;
-    auto linkageName = spirv::decodeStringLiteral(words, wordIndex).str();
-    auto linkageTypeAttr = opBuilder.getAttr<::mlir::spirv::LinkageTypeAttr>(
-        static_cast<::mlir::spirv::LinkageType>(words[wordIndex++]));
-    auto linkageAttr = opBuilder.getAttr<::mlir::spirv::LinkageAttributesAttr>(
-        linkageName, linkageTypeAttr);
-    decorations[words[0]].set(symbol, llvm::dyn_cast<Attribute>(linkageAttr));
+    StringRef linkageName = spirv::decodeStringLiteral(words, wordIndex);
+    std::vector<mlir::Attribute> attrElements;
+    attrElements.push_back(opBuilder.getStringAttr(linkageName));
+    attrElements.push_back(opBuilder.getStringAttr(stringifyLinkageType(
+        static_cast<spirv::LinkageType>(words[words.size() - 1]))));
+    ArrayAttr linkageAttrVal = opBuilder.getArrayAttr(attrElements);
+    decorations[words[0]].set(symbol, linkageAttrVal.dyn_cast<Attribute>());
     break;
   }
   case spirv::Decoration::Aliased:
