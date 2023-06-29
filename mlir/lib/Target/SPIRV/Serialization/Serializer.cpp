@@ -240,8 +240,10 @@ LogicalResult Serializer::processDecoration(Location loc, uint32_t resultID,
     args.push_back(linkageType);
     break;
   }
+  case spirv::Decoration::Alignment:
   case spirv::Decoration::Binding:
   case spirv::Decoration::DescriptorSet:
+  case spirv::Decoration::FuncParamIOKindINTEL:
   case spirv::Decoration::Location:
     if (auto intAttr = dyn_cast<IntegerAttr>(attr.getValue())) {
       args.push_back(intAttr.getValue().getZExtValue());
@@ -264,8 +266,14 @@ LogicalResult Serializer::processDecoration(Location loc, uint32_t resultID,
   case spirv::Decoration::NonReadable:
   case spirv::Decoration::NonWritable:
   case spirv::Decoration::NoPerspective:
+  case spirv::Decoration::NoSignedWrap:
+  case spirv::Decoration::NoUnsignedWrap:
   case spirv::Decoration::Restrict:
   case spirv::Decoration::RelaxedPrecision:
+  case spirv::Decoration::SingleElementVectorINTEL:
+  case spirv::Decoration::VectorComputeCallableFunctionINTEL:
+  case spirv::Decoration::VectorComputeFunctionINTEL:
+  case spirv::Decoration::VectorComputeVariableINTEL:
     // For unit attributes, the args list has no values so we do nothing
     if (auto unitAttr = dyn_cast<UnitAttr>(attr.getValue()))
       break;

@@ -296,8 +296,14 @@ LogicalResult spirv::Deserializer::processDecoration(ArrayRef<uint32_t> words) {
   case spirv::Decoration::NonReadable:
   case spirv::Decoration::NonWritable:
   case spirv::Decoration::NoPerspective:
+  case spirv::Decoration::NoSignedWrap:
+  case spirv::Decoration::NoUnsignedWrap:
   case spirv::Decoration::Restrict:
   case spirv::Decoration::RelaxedPrecision:
+  case spirv::Decoration::SingleElementVectorINTEL:
+  case spirv::Decoration::VectorComputeCallableFunctionINTEL:
+  case spirv::Decoration::VectorComputeFunctionINTEL:
+  case spirv::Decoration::VectorComputeVariableINTEL:
     if (words.size() != 2) {
       return emitError(unknownLoc, "OpDecoration with ")
              << decorationName << "needs a single target <id>";
@@ -308,6 +314,8 @@ LogicalResult spirv::Deserializer::processDecoration(ArrayRef<uint32_t> words) {
     // it is needed for many validation rules.
     decorations[words[0]].set(symbol, opBuilder.getUnitAttr());
     break;
+  case spirv::Decoration::Alignment:
+  case spirv::Decoration::FuncParamIOKindINTEL:
   case spirv::Decoration::Location:
   case spirv::Decoration::SpecId:
     if (words.size() != 3) {
@@ -361,6 +369,7 @@ LogicalResult spirv::Deserializer::processMemberName(ArrayRef<uint32_t> words) {
 
 LogicalResult
 spirv::Deserializer::processFunction(ArrayRef<uint32_t> operands) {
+  bool isImportedFunc = false;
   if (curFunction) {
     return emitError(unknownLoc, "found function inside function");
   }
@@ -406,6 +415,15 @@ spirv::Deserializer::processFunction(ArrayRef<uint32_t> operands) {
   if (decorations.count(fnID)) {
     for (auto attr : decorations[fnID].getAttrs()) {
       funcOp->setAttr(attr.getName(), attr.getValue());
+<<<<<<< HEAD
+=======
+      if (attr.getName() == "linkage_attributes" &&
+          (attr.getValue()
+               .dyn_cast<ArrayAttr>()[1]
+               .dyn_cast<StringAttr>()
+               .strref() == "Import"))
+        isImportedFunc = true;
+>>>>>>> 2a3cc982f7a7 (0016-Add-serialization-and-de-serialization-support.patch)
     }
   }
   curFunction = funcMap[fnID] = funcOp;
@@ -459,13 +477,15 @@ spirv::Deserializer::processFunction(ArrayRef<uint32_t> operands) {
   }
 
   // entryBlock is needed to access the arguments, Once that is done, we can
-  // erase the block for functions with 'Import' LinkageAttributes, since these
-  // are essentially function declarations, so they have no body.
-  auto linkageAttr = funcOp.getLinkageAttributes();
-  auto hasImportLinkage =
-      linkageAttr && (linkageAttr.value().getLinkageType().getValue() ==
-                      spirv::LinkageType::Import);
-  if (hasImportLinkage)
+  // erase the block for functions with LinkageAttributes, since these are
+  // essentially function declarations, so they have no body
+  // if (attr.getValue()
+  //         .dyn_cast<ArrayAttr>()[1]
+  //         .dyn_cast<StringAttr>()
+  //         .strref() == "Import") {
+  //   llvm::errs() << funcOp->getName() << "\n";
+  // }
+  if (isImportedFunc)
     funcOp.eraseBody();
 
   // RAII guard to reset the insertion point to the module's region after
