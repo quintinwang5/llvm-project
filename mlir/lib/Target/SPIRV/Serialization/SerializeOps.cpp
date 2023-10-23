@@ -293,7 +293,7 @@ LogicalResult Serializer::processFuncOp(spirv::FuncOp op) {
     if (mlir::spirv::symbolizeEnum<spirv::Decoration>(
             llvm::convertToCamelFromSnakeCase(attr.getName().strref(),
                                               /*capitalizeFirst=*/true)) !=
-        llvm::None) {
+        std::nullopt) {
       if (failed(processDecoration(op.getLoc(), funcID, attr))) {
         return failure();
       }
