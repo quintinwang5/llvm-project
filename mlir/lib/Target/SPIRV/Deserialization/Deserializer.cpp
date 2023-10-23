@@ -415,15 +415,12 @@ spirv::Deserializer::processFunction(ArrayRef<uint32_t> operands) {
   if (decorations.count(fnID)) {
     for (auto attr : decorations[fnID].getAttrs()) {
       funcOp->setAttr(attr.getName(), attr.getValue());
-<<<<<<< HEAD
-=======
       if (attr.getName() == "linkage_attributes" &&
           (attr.getValue()
                .dyn_cast<ArrayAttr>()[1]
                .dyn_cast<StringAttr>()
                .strref() == "Import"))
         isImportedFunc = true;
->>>>>>> 2a3cc982f7a7 (0016-Add-serialization-and-de-serialization-support.patch)
     }
   }
   curFunction = funcMap[fnID] = funcOp;

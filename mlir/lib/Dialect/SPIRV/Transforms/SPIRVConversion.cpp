@@ -122,7 +122,7 @@ static LogicalResult checkCapabilityAndExtensionRequirements(
   // Add capablity infered extensions to the list of extension requirement list,
   // only considers the capabilities that already available in the targetEnv
   for (auto cap : targetEnv.getAttr().getCapabilities()) {
-    llvm::Optional<::llvm::ArrayRef<::mlir::spirv::Extension>> ext =
+    std::optional<::llvm::ArrayRef<::mlir::spirv::Extension>> ext =
         getExtensions(cap);
     if (ext.has_value())
       updatedExtCandidates.push_back(ext.value());
@@ -409,7 +409,7 @@ convertVectorType(const spirv::TargetEnv &targetEnv,
   // For capabilities whose requirements were relaxed, relax requirements for
   // the extensions that were infered by those capabilities (e.g., elidedCaps)
   for (auto cap : elidedCaps) {
-    llvm::Optional<::llvm::ArrayRef<::mlir::spirv::Extension>> ext =
+    std::optional<::llvm::ArrayRef<::mlir::spirv::Extension>> ext =
         mlir::spirv::getExtensions(cap);
     if (ext.has_value())
       elidedExts.insert(elidedExts.end(), ext.value().begin(),

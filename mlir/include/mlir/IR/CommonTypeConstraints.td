@@ -873,5 +873,93 @@ def FloatLike : TypeOrContainer<AnyFloat, "floating-point-like">;
 def SignlessIntegerOrFloatLike : TypeConstraint<Or<[
     SignlessIntegerLike.predicate, FloatLike.predicate]>,
     "signless-integer-like or floating-point-like">;
+// Whether the number of elements of a vector is from the given
+// `allowedRanges` list, the list has two values, start and end of the range (inclusive)
+class IsVectorOfLengthRangePred<list<int> allowedRanges> :
+  And<[IsVectorTypePred,
+       And<[CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           >= }]
+                         # allowedRanges[0]>,
+                        CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           <= }]
+                         # allowedRanges[1]>]>]>;
+
+// Whether the number of elements of a fixed-length vector is from the given
+// `allowedRanges` list, the list has two values, start and end of the range (inclusive)
+class IsFixedVectorOfLengthRangePred<list<int> allowedRanges> :
+  And<[IsFixedVectorTypePred,
+       And<[CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           >= }]
+                         # allowedRanges[0]>,
+                        CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           <= }]
+                         # allowedRanges[1]>]>]>;
+
+def IsScalableVectorTypePred : CPred<[{::llvm::isa<::mlir::VectorType>($_self) &&
+                                   ::llvm::cast<VectorType>($_self).isScalable()}]>;
+
+// Whether the number of elements of a scalable vector is from the given
+// `allowedRanges` list, the list has two values, start and end of the range (inclusive)
+class IsScalableVectorOfLengthRangePred<list<int> allowedRanges> :
+  And<[IsScalableVectorTypePred,
+       And<[CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           >= }]
+                         # allowedRanges[0]>,
+                        CPred<[{$_self.cast<::mlir::VectorType>().getNumElements()
+                           <= }]
+                         # allowedRanges[1]>]>]>;
+
+// Any vector where the number of elements is from the given
+// `allowedRanges` list
+class VectorOfLengthRange<list<int> allowedRanges> : Type<
+  IsVectorOfLengthRangePred<allowedRanges>,
+  " of length " # !interleave(allowedRanges, "-"),
+  "::mlir::VectorType">;
+
+// Any fixed-length vector where the number of elements is from the given
+// `allowedLengths` list
+class FixedVectorOfLengthRange<list<int> allowedRanges> : Type<
+  IsFixedVectorOfLengthRangePred<allowedRanges>,
+  " of length " # !interleave(allowedRanges, "-"),
+  "::mlir::VectorType">;
+
+// Any scalable vector where the number of elements is from the given
+// `allowedLengths` list
+class ScalableVectorOfLengthRange<list<int> allowedRanges> : Type<
+  IsScalableVectorOfLengthRangePred<allowedRanges>,
+  " of length " # !interleave(allowedRanges, "-"),
+  "::mlir::VectorType">;
+
+// Any vector where the number of elements is from the given
+// `allowedRanges` list and the type is from the given `allowedTypes`
+// list
+class VectorOfLengthRangeAndType<list<int> allowedRanges,
+                            list<Type> allowedTypes> : Type<
+  And<[VectorOf<allowedTypes>.predicate,
+       VectorOfLengthRange<allowedRanges>.predicate]>,
+  VectorOf<allowedTypes>.summary # VectorOfLengthRange<allowedRanges>.summary,
+  "::mlir::VectorType">;
+
+// Any fixed-length vector where the number of elements is from the given
+// `allowedRanges` list and the type is from the given `allowedTypes`
+// list
+class FixedVectorOfLengthRangeAndType<list<int> allowedRanges,
+                                    list<Type> allowedTypes> : Type<
+  And<[FixedVectorOf<allowedTypes>.predicate,
+       FixedVectorOfLengthRange<allowedRanges>.predicate]>,
+  FixedVectorOf<allowedTypes>.summary #
+  FixedVectorOfLengthRange<allowedRanges>.summary,
+  "::mlir::VectorType">;
+
+// Any scalable vector where the number of elements is from the given
+// `allowedRanges` list and the type is from the given `allowedTypes`
+// list
+class ScalableVectorOfLengthRangeAndType<list<int> allowedRanges,
+                                    list<Type> allowedTypes> : Type<
+  And<[ScalableVectorOf<allowedTypes>.predicate,
+       ScalableVectorOfLengthRange<allowedRanges>.predicate]>,
+  ScalableVectorOf<allowedTypes>.summary #
+  ScalableVectorOfLengthRange<allowedRanges>.summary,
+  "::mlir::VectorType">;
 
 #endif // COMMON_TYPE_CONSTRAINTS_TD

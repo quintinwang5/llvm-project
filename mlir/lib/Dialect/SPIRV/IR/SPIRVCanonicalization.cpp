@@ -195,6 +195,7 @@ OpFoldResult spirv::BitcastOp::fold(FoldAdaptor /*adaptor*/) {
 //===----------------------------------------------------------------------===//
 
 OpFoldResult spirv::CompositeExtractOp::fold(FoldAdaptor adaptor) {
+  Value compositeOp = getComposite();
   if (auto insertOp =
           getComposite().getDefiningOp<spirv::CompositeInsertOp>()) {
     OpFoldResult result = {};
@@ -226,7 +227,6 @@ OpFoldResult spirv::CompositeExtractOp::fold(FoldAdaptor adaptor) {
 
     return result;
   }
-
   if (auto constructOp =
           compositeOp.getDefiningOp<spirv::CompositeConstructOp>()) {
     auto type = llvm::cast<spirv::CompositeType>(constructOp.getType());
