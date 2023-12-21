@@ -1163,9 +1163,10 @@ LogicalResult spirv::GlobalVariableOp::verify() {
     // constants and other variables is supported. They could be normal
     // constants in the module scope as well.
     if (!initOp ||
-        !isa<spirv::GlobalVariableOp, spirv::SpecConstantOp>(initOp)) {
+        !isa<spirv::GlobalVariableOp, spirv::SpecConstantOp, SpecConstantCompositeOp>(initOp)) {
       return emitOpError("initializer must be result of a "
-                         "spirv.SpecConstant or spirv.GlobalVariable op");
+                         "spirv.SpecConstant or spirv.GlobalVariable op or "
+                         "spirv.SpecConstantCompositeOp");
     }
   }
 
